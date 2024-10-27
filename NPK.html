@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NPK and Weather Display</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <style>
+        body {
+            background: #2a2a2a;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #333;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+        }
+        .weather-section, .npk-section {
+            margin-bottom: 40px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .temp-info {
+            display: flex;
+            align-items: center;
+        }
+        .temp-info h1 {
+            font-size: 50px;
+            margin: 0;
+        }
+        .weather-desc {
+            margin-left: 15px;
+            font-size: 18px;
+        }
+        .daily-forecast {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+        }
+        .day-card {
+            text-align: center;
+            width: 14%;
+        }
+        .day-card img {
+            width: 40px;
+            height: 40px;
+        }
+        canvas {
+            margin-top: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .weather-icon {
+            width: 120px;
+            height: 130px;
+        }
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .input-wrapper input {
+            padding: 5px;
+            font-size: 16px;
+        }
+        .input-wrapper button {
+            padding: 5px 10px;
+            font-size: 16px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Weather Section -->
+        <div class="weather-section">
+            <div class="header">
+                <div class="temp-info">
+                    <img id="weather-icon" class="weather-icon" src="" alt="Weather Icon">
+                    <div class="weather-desc">
+                        <h1 id="temperature">-</h1>
+                        <p id="description">-</p>
+                        <p id="precipitation">-</p>
+                        <p id="humidity">-</p>
+                        <p id="wind">-</p>
+                    </div>
+                </div>
+                <div class="input-wrapper">
+                    <input type="text" id="city-input" placeholder="Enter City">
+                    <button onclick="fetchWeather()">Get Weather</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- NPK Section -->
+        <div class="npk-section">
+            <canvas id="npkChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = 'd5808de987059a43d927291e2f976deb';
+
+        function fetchWeather() {
+            const city = document.getElementById('city-input').value;
+            const apiUrl = `http://api.weatherstack.com/current?access_key=${apiKey}&query=${city}`;
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.current) {
+                        document.getElementById('temperature').textContent = `${data.current.temperature}°C`;
+                        document.getElementById('description').textContent = data.current.weather_descriptions[0];
+                        document.getElementById('precipitation').textContent = `Precipitation: ${data.current.precip}%`;
+                        document.getElementById('humidity').textContent = `Humidity: ${data.current.humidity}%`;
+                        document.getElementById('wind').textContent = `Wind: ${data.current.wind_speed} km/h`;
+
+                        // Set appropriate weather icon
+                        const desc = data.current.weather_descriptions[0].toLowerCase();
+                        let iconSrc = '';
+                        if (desc.includes('rain')) {
+                            iconSrc = 'C:/Users/vishn/Downloads/rainy.png';
+                        } else if (desc.includes('cloudy')) {
+                            iconSrc = 'C:/Users/vishn/Downloads/cloudy.png';
+                        } else if (desc.includes('partly cloudy')) {
+                            iconSrc = 'C:/Users/vishn/Downloads/partly cloudy.png';
+                        } else if (desc.includes('sunny') || desc.includes('clear')) {
+                            iconSrc = 'C:/Users/vishn/Downloads/sunny.png';
+                        }
+                        document.getElementById('weather-icon').src = iconSrc;
+                    }
+                })
+                .catch(error => console.error('Error fetching weather:', error));
+        }
+
+        // NPK Initial Data and Chart Update (same as your previous logic)
+        const npkData = {
+            labels: Array.from({length: 10}, (_, i) => i),
+            datasets: [
+                { label: 'Nitrogen (N)', data: [20, 25, 22, 28, 24, 26, 23, 27, 25, 24], backgroundColor: 'rgba(54, 162, 235, 0.5)', borderColor: 'rgba(54, 162, 235, 1)', fill: true },
+                { label: 'Phosphorus (P)', data: [15, 18, 16, 19, 17, 20, 18, 21, 19, 18], backgroundColor: 'rgba(255, 206, 86, 0.5)', borderColor: 'rgba(255, 206, 86, 1)', fill: true },
+                { label: 'Potassium (K)', data: [10, 12, 11, 13, 12, 14, 13, 15, 14, 13], backgroundColor: 'rgba(75, 192, 192, 0.5)', borderColor: 'rgba(75, 192, 192, 1)', fill: true }
+            ]
+        };
+
+        const npkCtx = document.getElementById('npkChart').getContext('2d');
+        const npkChart = new Chart(npkCtx, {
+            type: 'line',
+            data: npkData,
+            options: {
+                responsive: true,
+                plugins: {
+                    title: { display: true, text: 'NPK Levels Over Time', font: { size: 16 } },
+                    legend: { position: 'top' }
+                },
+                scales: {
+                    y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Concentration (ppm)' }},
+                    x: { title: { display: true, text: 'Time' }}
+                }
+            }
+        });
+
+        function updateNpkData() {
+            const lastN = npkData.datasets[0].data[npkData.datasets[0].data.length - 1];
+            const lastP = npkData.datasets[1].data[npkData.datasets[1].data.length - 1];
+            const lastK = npkData.datasets[2].data[npkData.datasets[2].data.length - 1];
+
+            npkData.datasets[0].data.shift();
+            npkData.datasets[1].data.shift();
+            npkData.datasets[2].data.shift();
+
+            npkData.datasets[0].data.push(Math.max(0, lastN + (Math.random() - 0.5) * 5));
+            npkData.datasets[1].data.push(Math.max(0, lastP + (Math.random() - 0.5) * 4));
+            npkData.datasets[2].data.push(Math.max(0, lastK + (Math.random() - 0.5) * 3));
+
+            npkChart.update();
+        }
+
+        setInterval(updateNpkData, 5000);
+    </script>
+</body>
+</html>
